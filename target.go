@@ -331,6 +331,19 @@ func (tm TargetMachine) EmitToMemoryBuffer(m Module, ft CodeGenFileType) (Memory
 	return mb, nil
 }
 
+func (tm TargetMachine) EmitToFile(m Module, filename string, ft CodeGenFileType) error {
+	cfilename := C.CString(filename)
+	defer C.free(unsafe.Pointer(cfilename))
+	var errstr *C.char
+	fail := C.LLVMTargetMachineEmitToFile(tm.C, m.C, cfilename, C.LLVMCodeGenFileType(ft), &errstr)
+	if fail != 0 {
+		err := errors.New(C.GoString(errstr))
+		C.LLVMDisposeMessage(errstr)
+		return err
+	}
+	return nil
+}
+
 func (tm TargetMachine) AddAnalysisPasses(pm PassManager) {
 	C.LLVMAddAnalysisPasses(tm.C, pm.C)
 }
