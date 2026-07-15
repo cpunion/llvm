@@ -1,0 +1,42 @@
+name: Coroutine
+
+on:
+  pull_request:
+    branches:
+      - llvm-coro
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        llvm: [14, 18, 19, 21]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Install LLVM
+        run: |
+          echo 'deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-${{ matrix.llvm }} main' | sudo tee /etc/apt/sources.list.d/llvm.list
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends llvm-${{ matrix.llvm }}-dev
+
+      - name: Test LLVM ${{ matrix.llvm }}
+        run: go test -v -tags=llvm${{ matrix.llvm }}
+
+      - name: Test default LLVM
+        if: matrix.llvm == 19
+        run: go test -v
+
+      - name: Vet
+        if: matrix.llvm == 19
+        run: go vet

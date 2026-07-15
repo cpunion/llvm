@@ -3,7 +3,16 @@
 
 name: Test
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - "**"
+      - "!llvm-coro"
+      - "!coro/**"
+  pull_request:
+    branches:
+      - "**"
+      - "!llvm-coro"
 
 jobs:
   test-macos:
