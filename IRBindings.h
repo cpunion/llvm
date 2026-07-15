@@ -35,6 +35,8 @@ struct LLVMDebugLocMetadata{
 
 LLVMMetadataRef LLVMConstantAsMetadata(LLVMValueRef Val);
 
+LLVMValueRef LLVMGoConstTokenNone(LLVMContextRef C);
+
 LLVMMetadataRef LLVMMDString2(LLVMContextRef C, const char *Str, unsigned SLen);
 LLVMMetadataRef LLVMMDNode2(LLVMContextRef C, LLVMMetadataRef *MDs,
                             unsigned Count);

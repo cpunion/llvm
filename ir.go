@@ -829,6 +829,12 @@ func (v Value) SetOperand(i int, op Value) { C.LLVMSetOperand(v.C, C.unsigned(i)
 func (v Value) OperandsCount() int         { return int(C.LLVMGetNumOperands(v.C)) }
 
 // Operations on constants of any type
+// ConstTokenNone returns the empty token constant owned by c.
+func (c Context) ConstTokenNone() (v Value) {
+	v.C = C.LLVMGoConstTokenNone(c.C)
+	return
+}
+
 func ConstNull(t Type) (v Value)        { v.C = C.LLVMConstNull(t.C); return }
 func ConstAllOnes(t Type) (v Value)     { v.C = C.LLVMConstAllOnes(t.C); return }
 func Undef(t Type) (v Value)            { v.C = C.LLVMGetUndef(t.C); return }
