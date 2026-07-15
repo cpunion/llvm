@@ -17,10 +17,9 @@ extern "C" {
 #endif
 
 LLVMTargetMachineRef LLVMGoCreateTargetMachineWithOptions(
-    LLVMTargetRef T, const char *Triple, const char *CPU,
-    const char *Features, LLVMCodeGenOptLevel Level, LLVMRelocMode Reloc,
-    LLVMCodeModel CodeModel,
-    LLVMBool FunctionSections, LLVMBool DataSections,
+    LLVMTargetRef T, const char *Triple, const char *CPU, const char *Features,
+    LLVMCodeGenOptLevel Level, LLVMRelocMode RelocMode, LLVMCodeModel CM,
+    const char *ABIName, LLVMBool FunctionSections, LLVMBool DataSections,
     LLVMBool UniqueSectionNames);
 LLVMBool LLVMGoTargetMachineFunctionSections(LLVMTargetMachineRef TM);
 LLVMBool LLVMGoTargetMachineDataSections(LLVMTargetMachineRef TM);
