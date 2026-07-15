@@ -13,6 +13,7 @@
 #include "IRBindings.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/Function.h"
@@ -25,6 +26,10 @@ using namespace llvm;
 
 LLVMMetadataRef LLVMConstantAsMetadata(LLVMValueRef C) {
   return wrap(ConstantAsMetadata::get(unwrap<Constant>(C)));
+}
+
+LLVMValueRef LLVMGoConstTokenNone(LLVMContextRef C) {
+  return wrap(ConstantTokenNone::get(*unwrap(C)));
 }
 
 LLVMMetadataRef LLVMMDString2(LLVMContextRef C, const char *Str, unsigned SLen) {
