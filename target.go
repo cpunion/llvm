@@ -42,9 +42,12 @@ type (
 	CodeModel       C.LLVMCodeModel
 )
 
-// TargetMachineOptions contains explicit llvm::TargetOptions flags exposed by
+// TargetMachineOptions contains explicit target options exposed by
 // CreateTargetMachineWithOptions.
 type TargetMachineOptions struct {
+	// ABIName selects the target ABI (for example, "lp64d" on RISC-V).
+	// An empty string lets LLVM select its default ABI.
+	ABIName string
 	// FunctionSections places each function in its own section.
 	FunctionSections bool
 	// DataSections places each data object in its own section.
@@ -269,9 +272,8 @@ func (t Target) CreateTargetMachine(Triple string, CPU string, Features string,
 }
 
 // CreateTargetMachineWithOptions creates a new TargetMachine with explicit
-// llvm::TargetOptions flags that are not exposed by the LLVM C API.
-// Use CreateTargetMachine if you do not need to override TargetOptions fields
-// that are absent from the LLVM C API.
+// target options. ABIName is applied while LLVM constructs the target machine.
+// Use CreateTargetMachine if you do not need to override any options.
 func (t Target) CreateTargetMachineWithOptions(Triple string, CPU string, Features string,
 	Level CodeGenOptLevel, Reloc RelocMode,
 	CodeModel CodeModel, opts TargetMachineOptions) (tm TargetMachine) {
@@ -281,6 +283,8 @@ func (t Target) CreateTargetMachineWithOptions(Triple string, CPU string, Featur
 	defer C.free(unsafe.Pointer(cCPU))
 	cFeatures := C.CString(Features)
 	defer C.free(unsafe.Pointer(cFeatures))
+	cABIName := C.CString(opts.ABIName)
+	defer C.free(unsafe.Pointer(cABIName))
 
 	tm.C = C.LLVMGoCreateTargetMachineWithOptions(
 		t.C,
@@ -290,6 +294,7 @@ func (t Target) CreateTargetMachineWithOptions(Triple string, CPU string, Featur
 		C.LLVMCodeGenOptLevel(Level),
 		C.LLVMRelocMode(Reloc),
 		C.LLVMCodeModel(CodeModel),
+		cABIName,
 		boolToLLVMBool(opts.FunctionSections),
 		boolToLLVMBool(opts.DataSections),
 		boolToLLVMBool(opts.UniqueSectionNames),
