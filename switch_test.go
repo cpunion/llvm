@@ -31,11 +31,14 @@ case1:
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer f.Close()
 	defer os.Remove(f.Name())
 	if _, err := f.WriteString(src); err != nil {
 		t.Fatal(err)
 	}
-	f.Close()
+	if err := f.Close(); err != nil {
+		t.Fatal(err)
+	}
 
 	ctx := NewContext()
 	defer ctx.Dispose()

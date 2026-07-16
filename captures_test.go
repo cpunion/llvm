@@ -17,6 +17,7 @@ func TestCapturesAttribute(t *testing.T) {
 	}
 
 	ctx := NewContext()
+	defer ctx.Dispose()
 	mod := ctx.NewModule("")
 	defer mod.Dispose()
 
