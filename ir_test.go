@@ -175,6 +175,35 @@ func TestIntrinsicBindings(t *testing.T) {
 	}
 }
 
+func TestInlineAsmIntrospection(t *testing.T) {
+	ctx := NewContext()
+	defer ctx.Dispose()
+
+	fnType := FunctionType(ctx.VoidType(), []Type{ctx.Int64Type()}, false)
+	asm := InlineAsm(fnType, "nop $0", "r,~{memory}", true, true, InlineAsmDialectIntel, true)
+	if asm.IsAInlineAsm().IsNil() {
+		t.Fatal("InlineAsm did not produce an inline-assembly value")
+	}
+	if got, want := asm.InlineAsmString(), "nop $0"; got != want {
+		t.Fatalf("InlineAsmString() = %q, want %q", got, want)
+	}
+	if got, want := asm.InlineAsmConstraintString(), "r,~{memory}"; got != want {
+		t.Fatalf("InlineAsmConstraintString() = %q, want %q", got, want)
+	}
+	if !asm.InlineAsmHasSideEffects() {
+		t.Fatal("InlineAsmHasSideEffects() = false, want true")
+	}
+	if !asm.InlineAsmNeedsAlignedStack() {
+		t.Fatal("InlineAsmNeedsAlignedStack() = false, want true")
+	}
+	if got, want := asm.InlineAsmDialect(), InlineAsmDialectIntel; got != want {
+		t.Fatalf("InlineAsmDialect() = %v, want %v", got, want)
+	}
+	if !asm.InlineAsmCanThrow() {
+		t.Fatal("InlineAsmCanThrow() = false, want true")
+	}
+}
+
 func TestConstTokenNoneWithCoroutineIntrinsics(t *testing.T) {
 	ctx := NewContext()
 	defer ctx.Dispose()

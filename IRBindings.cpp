@@ -18,6 +18,7 @@
 #include "llvm/IR/DebugInfoMetadata.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/IRBuilder.h"
+#include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/Intrinsics.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -91,6 +92,34 @@ LLVMValueRef LLVMGoGetInlineAsm(LLVMTypeRef Ty, char *AsmString,
                           ConstraintsSize, HasSideEffects,
                           IsAlignStack,
                           Dialect, CanThrow);
+}
+
+const char *LLVMGoGetInlineAsmAsmString(LLVMValueRef Asm, size_t *Size) {
+  StringRef String = unwrap<InlineAsm>(Asm)->getAsmString();
+  *Size = String.size();
+  return String.data();
+}
+
+const char *LLVMGoGetInlineAsmConstraintString(LLVMValueRef Asm, size_t *Size) {
+  StringRef String = unwrap<InlineAsm>(Asm)->getConstraintString();
+  *Size = String.size();
+  return String.data();
+}
+
+LLVMBool LLVMGoInlineAsmHasSideEffects(LLVMValueRef Asm) {
+  return unwrap<InlineAsm>(Asm)->hasSideEffects();
+}
+
+LLVMBool LLVMGoInlineAsmNeedsAlignedStack(LLVMValueRef Asm) {
+  return unwrap<InlineAsm>(Asm)->isAlignStack();
+}
+
+LLVMInlineAsmDialect LLVMGoGetInlineAsmDialect(LLVMValueRef Asm) {
+  return static_cast<LLVMInlineAsmDialect>(unwrap<InlineAsm>(Asm)->getDialect());
+}
+
+LLVMBool LLVMGoInlineAsmCanThrow(LLVMValueRef Asm) {
+  return unwrap<InlineAsm>(Asm)->canThrow();
 }
 
 LLVMValueRef LLVMGoBuildIntrinsicCall(LLVMBuilderRef B, LLVMTypeRef RetTy,
