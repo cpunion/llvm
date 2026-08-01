@@ -57,6 +57,13 @@ LLVMValueRef LLVMGoGetInlineAsm(LLVMTypeRef Ty, char *AsmString,
                                 LLVMBool IsAlignStack,
                                 LLVMInlineAsmDialect Dialect, LLVMBool CanThrow);
 
+const char *LLVMGoGetInlineAsmAsmString(LLVMValueRef Asm, size_t *Size);
+const char *LLVMGoGetInlineAsmConstraintString(LLVMValueRef Asm, size_t *Size);
+LLVMBool LLVMGoInlineAsmHasSideEffects(LLVMValueRef Asm);
+LLVMBool LLVMGoInlineAsmNeedsAlignedStack(LLVMValueRef Asm);
+LLVMInlineAsmDialect LLVMGoGetInlineAsmDialect(LLVMValueRef Asm);
+LLVMBool LLVMGoInlineAsmCanThrow(LLVMValueRef Asm);
+
 LLVMValueRef LLVMGoBuildIntrinsicCall(LLVMBuilderRef B, LLVMTypeRef RetTy,
                                       unsigned ID, LLVMValueRef *Args,
                                       unsigned Count, const char *Name);

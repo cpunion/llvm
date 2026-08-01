@@ -1381,6 +1381,46 @@ func InlineAsm(t Type, asmString, constraints string, hasSideEffects, isAlignSta
 	return
 }
 
+// InlineAsmString returns the assembly template of an inline-assembly value.
+// The receiver must be an inline-assembly value.
+func (v Value) InlineAsmString() string {
+	var size C.size_t
+	data := C.LLVMGoGetInlineAsmAsmString(v.C, &size)
+	return C.GoStringN(data, C.int(size))
+}
+
+// InlineAsmConstraintString returns the constraint string of an
+// inline-assembly value. The receiver must be an inline-assembly value.
+func (v Value) InlineAsmConstraintString() string {
+	var size C.size_t
+	data := C.LLVMGoGetInlineAsmConstraintString(v.C, &size)
+	return C.GoStringN(data, C.int(size))
+}
+
+// InlineAsmHasSideEffects reports whether an inline-assembly value is marked
+// as having side effects. The receiver must be an inline-assembly value.
+func (v Value) InlineAsmHasSideEffects() bool {
+	return C.LLVMGoInlineAsmHasSideEffects(v.C) != 0
+}
+
+// InlineAsmNeedsAlignedStack reports whether an inline-assembly value requires
+// stack alignment. The receiver must be an inline-assembly value.
+func (v Value) InlineAsmNeedsAlignedStack() bool {
+	return C.LLVMGoInlineAsmNeedsAlignedStack(v.C) != 0
+}
+
+// InlineAsmDialect returns the dialect of an inline-assembly value. The
+// receiver must be an inline-assembly value.
+func (v Value) InlineAsmDialect() InlineAsmDialect {
+	return InlineAsmDialect(C.LLVMGoGetInlineAsmDialect(v.C))
+}
+
+// InlineAsmCanThrow reports whether an inline-assembly value may unwind. The
+// receiver must be an inline-assembly value.
+func (v Value) InlineAsmCanThrow() bool {
+	return C.LLVMGoInlineAsmCanThrow(v.C) != 0
+}
+
 // Operations on aggregates
 func (v Value) Indices() []uint32 {
 	num := C.LLVMGetNumIndices(v.C)
