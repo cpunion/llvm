@@ -95,13 +95,13 @@ LLVMValueRef LLVMGoGetInlineAsm(LLVMTypeRef Ty, char *AsmString,
 }
 
 const char *LLVMGoGetInlineAsmAsmString(LLVMValueRef Asm, size_t *Size) {
-  const std::string &String = unwrap<InlineAsm>(Asm)->getAsmString();
+  StringRef String = unwrap<InlineAsm>(Asm)->getAsmString();
   *Size = String.size();
   return String.data();
 }
 
 const char *LLVMGoGetInlineAsmConstraintString(LLVMValueRef Asm, size_t *Size) {
-  const std::string &String = unwrap<InlineAsm>(Asm)->getConstraintString();
+  StringRef String = unwrap<InlineAsm>(Asm)->getConstraintString();
   *Size = String.size();
   return String.data();
 }
