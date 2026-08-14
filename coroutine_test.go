@@ -9,17 +9,11 @@
 package llvm
 
 import (
-	"strconv"
 	"strings"
 	"testing"
 )
 
 func TestSwitchedResumeCoroutinePassPipelines(t *testing.T) {
-	majorVersion, err := strconv.Atoi(strings.SplitN(Version, ".", 2)[0])
-	if err != nil {
-		t.Fatalf("could not parse LLVM version %q: %v", Version, err)
-	}
-
 	InitializeAllTargetInfos()
 	InitializeAllTargets()
 	InitializeAllTargetMCs()
@@ -34,25 +28,19 @@ func TestSwitchedResumeCoroutinePassPipelines(t *testing.T) {
 	)
 	defer tm.Dispose()
 
-	explicitPipeline := "coro-early,cgscc(coro-split),coro-cleanup"
-	if majorVersion == 14 {
-		// In LLVM 14, coro-early and coro-cleanup are function passes. Newer
-		// releases expose them as module passes and accept the unnested form.
-		explicitPipeline = "function(coro-early),cgscc(coro-split),function(coro-cleanup)"
-	}
 	for _, test := range []struct {
 		name     string
 		pipeline string
 	}{
-		{name: "explicit coroutine pipeline", pipeline: explicitPipeline},
+		{name: "explicit coroutine pipeline", pipeline: "coro-early,cgscc(coro-split),coro-cleanup"},
 		{name: "production O0 pipeline", pipeline: "default<O0>"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			ctx := NewContext()
 			defer ctx.Dispose()
-			mod := buildSwitchedResumeCoroutine(t, ctx, tm, majorVersion)
+			mod := buildSwitchedResumeCoroutine(t, ctx, tm)
 			defer mod.Dispose()
-			assertSwitchedResumeCoroutineFrontendState(t, mod, majorVersion)
+			assertSwitchedResumeCoroutineFrontendState(t, mod)
 
 			if err := VerifyModule(mod, ReturnStatusAction); err != nil {
 				t.Fatalf("coroutine module did not verify before %s: %v\n%s", test.pipeline, err, mod.String())
@@ -73,7 +61,7 @@ func TestSwitchedResumeCoroutinePassPipelines(t *testing.T) {
 	}
 }
 
-func buildSwitchedResumeCoroutine(t *testing.T, ctx Context, tm TargetMachine, majorVersion int) Module {
+func buildSwitchedResumeCoroutine(t *testing.T, ctx Context, tm TargetMachine) Module {
 	t.Helper()
 
 	mod := ctx.NewModule("switched-resume-coroutine")
@@ -107,17 +95,11 @@ func buildSwitchedResumeCoroutine(t *testing.T, ctx Context, tm TargetMachine, m
 	}
 
 	fn := AddFunction(mod, "stackless", FunctionType(ptr, nil, false))
-	if majorVersion == 14 {
-		// LLVM 14 models this as a frontend-to-CoroEarly state machine: "0"
-		// means unprepared input, while "1" is reserved for prepared IR.
-		fn.AddFunctionAttr(ctx.CreateStringAttribute("coroutine.presplit", "0"))
-	} else {
-		kind := AttributeKindID("presplitcoroutine")
-		if kind == 0 {
-			t.Fatal("could not look up presplitcoroutine attribute")
-		}
-		fn.AddFunctionAttr(ctx.CreateEnumAttribute(kind, 0))
+	kind := AttributeKindID("presplitcoroutine")
+	if kind == 0 {
+		t.Fatal("could not look up presplitcoroutine attribute")
 	}
+	fn.AddFunctionAttr(ctx.CreateEnumAttribute(kind, 0))
 
 	frameAllocType := FunctionType(ptr, []Type{sizeType, sizeType}, false)
 	frameAlloc := AddFunction(mod, "coro_frame_alloc", frameAllocType)
@@ -228,32 +210,18 @@ func buildSwitchedResumeCoroutine(t *testing.T, ctx Context, tm TargetMachine, m
 	builder.CreateBr(end)
 
 	builder.SetInsertPointAtEnd(end)
-	endArgs := []Value{handle, falseValue}
-	endType := i1
-	endName := "ended"
-	if majorVersion >= 18 {
-		endArgs = append(endArgs, ctx.ConstTokenNone())
-	}
-	if majorVersion >= 22 {
-		endType = void
-		endName = ""
-	}
-	createIntrinsic(endType, "llvm.coro.end", endArgs, endName)
+	createIntrinsic(void, "llvm.coro.end", []Value{handle, falseValue, ctx.ConstTokenNone()}, "")
 	builder.CreateRet(handle)
 
 	returned = true
 	return mod
 }
 
-func assertSwitchedResumeCoroutineFrontendState(t *testing.T, mod Module, majorVersion int) {
+func assertSwitchedResumeCoroutineFrontendState(t *testing.T, mod Module) {
 	t.Helper()
 
 	text := mod.String()
-	if majorVersion == 14 {
-		if !strings.Contains(text, `"coroutine.presplit"="0"`) {
-			t.Fatalf("LLVM 14 frontend coroutine is not marked unprepared for CoroEarly:\n%s", text)
-		}
-	} else if !strings.Contains(text, "presplitcoroutine") {
+	if !strings.Contains(text, "presplitcoroutine") {
 		t.Fatalf("frontend coroutine lacks presplitcoroutine attribute:\n%s", text)
 	}
 	if !strings.Contains(text, "%allocation.alignment = select i1") {

@@ -13,7 +13,6 @@
 package llvm
 
 import (
-	"strconv"
 	"strings"
 	"testing"
 )
@@ -90,13 +89,8 @@ func TestAttributes(t *testing.T) {
 	}
 
 	for _, name := range attrTests {
-		majorVersion, err := strconv.Atoi(strings.SplitN(Version, ".", 2)[0])
-		if err != nil {
-			// sanity check, should be unreachable
-			t.Errorf("could not parse LLVM version: %v", err)
-		}
-		if majorVersion >= 15 && name == "uwtable" {
-			// This changed from an EnumAttr to an IntAttr in LLVM 15, and testAttribute doesn't work on such attributes.
+		if name == "uwtable" {
+			// This is an IntAttr in LLVM 22, and testAttribute only covers EnumAttr.
 			continue
 		}
 		testAttribute(t, name)
@@ -258,11 +252,6 @@ func TestConstTokenNoneWithCoroutineIntrinsics(t *testing.T) {
 		t.Fatalf("ConstTokenNone string = %q, want %q", got, "token none")
 	}
 
-	majorVersion, err := strconv.Atoi(strings.SplitN(Version, ".", 2)[0])
-	if err != nil {
-		t.Fatalf("could not parse LLVM version: %v", err)
-	}
-
 	mod := ctx.NewModule("coro-token-none")
 	defer mod.Dispose()
 	builder := ctx.NewBuilder()
@@ -282,23 +271,13 @@ func TestConstTokenNoneWithCoroutineIntrinsics(t *testing.T) {
 		t.Fatal("could not construct llvm.coro.suspend with token none")
 	}
 
-	// LLVM 18 added the unwind token operand to llvm.coro.end. LLVM 22
-	// subsequently changed only its result type from i1 to void.
-	if majorVersion >= 18 {
-		endID := LookupIntrinsicID("llvm.coro.end")
-		if endID == 0 {
-			t.Fatal("could not look up llvm.coro.end intrinsic")
-		}
-		endType := ctx.Int1Type()
-		endName := "end"
-		if majorVersion >= 22 {
-			endType = ctx.VoidType()
-			endName = ""
-		}
-		end := builder.CreateIntrinsic(endType, endID, []Value{fn.Param(0), falseValue, none}, endName)
-		if end.IsNil() {
-			t.Fatal("could not construct llvm.coro.end with token none")
-		}
+	endID := LookupIntrinsicID("llvm.coro.end")
+	if endID == 0 {
+		t.Fatal("could not look up llvm.coro.end intrinsic")
+	}
+	end := builder.CreateIntrinsic(ctx.VoidType(), endID, []Value{fn.Param(0), falseValue, none}, "")
+	if end.IsNil() {
+		t.Fatal("could not construct llvm.coro.end with token none")
 	}
 	builder.CreateRetVoid()
 
@@ -309,7 +288,7 @@ func TestConstTokenNoneWithCoroutineIntrinsics(t *testing.T) {
 	if !strings.Contains(text, "@llvm.coro.suspend(token none, i1 false)") {
 		t.Fatalf("llvm.coro.suspend did not print token none:\n%s", text)
 	}
-	if majorVersion >= 18 && !strings.Contains(text, "i1 false, token none)") {
+	if !strings.Contains(text, "i1 false, token none)") {
 		t.Fatalf("llvm.coro.end did not print token none:\n%s", text)
 	}
 }
