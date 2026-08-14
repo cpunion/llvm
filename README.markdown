@@ -12,12 +12,13 @@ This library provides bindings to a system-installed LLVM.
 
 Currently supported:
 
-  * LLVM 22, 21, 20, 19, 18, 17, 16, 15 and 14 from [apt.llvm.org](http://apt.llvm.org/) on Debian/Ubuntu.
-  * LLVM 22, 21, 20, 19, 18, 17, 16, 15 and 14 from Homebrew on macOS.
-  * Any of the above versions with a manually built LLVM through the `byollvm` build tag. You need to set up `CFLAGS`/`LDFLAGS` etc yourself in this case.
+  * LLVM 22 from [apt.llvm.org](http://apt.llvm.org/) on Debian/Ubuntu.
+  * LLVM 22 from Homebrew on macOS.
+  * A manually built LLVM 22 through the `byollvm` build tag. You need to set
+    up `CFLAGS`/`LDFLAGS` yourself in this case.
 
-You can select the LLVM version using a build tag, for example `-tags=llvm22`
-to use LLVM 22.
+LLVM 22 is the default and sole supported ABI. Version-selection build tags
+are no longer required or supported.
 
 ## Usage
 
@@ -25,7 +26,8 @@ If you have a supported LLVM installation, you should be able to do a simple `go
 
     go get github.com/xgo-dev/llvm
 
-You can use build tags to select a LLVM version. For example, use `-tags=llvm22` to select LLVM 22. Setting a build tag for a LLVM version that is not supported will be ignored.
+The package links LLVM 22 by default. Use `byollvm` only to supply a custom
+LLVM 22 installation.
 
 ## License
 

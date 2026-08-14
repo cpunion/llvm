@@ -1,5 +1,3 @@
-//go:build llvm22
-
 package llvm
 
 /*
