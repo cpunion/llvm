@@ -1329,6 +1329,15 @@ func (v Value) InstructionCallConv() CallConv {
 func (v Value) AddCallSiteAttribute(i int, a Attribute) {
 	C.LLVMAddCallSiteAttribute(v.C, C.LLVMAttributeIndex(i), a.C)
 }
+func (v Value) GetCallSiteAttributesAtIndex(i int) (attrs []Attribute) {
+	n := C.LLVMGetCallSiteAttributeCount(v.C, C.LLVMAttributeIndex(i))
+	if n == 0 {
+		return
+	}
+	attrs = make([]Attribute, n)
+	C.LLVMGetCallSiteAttributes(v.C, C.LLVMAttributeIndex(i), &attrs[0].C)
+	return
+}
 func (v Value) GetCallSiteEnumAttribute(i int, kind uint) (a Attribute) {
 	a.C = C.LLVMGetCallSiteEnumAttribute(v.C, C.LLVMAttributeIndex(i), C.unsigned(kind))
 	return
