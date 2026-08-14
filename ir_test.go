@@ -103,6 +103,45 @@ func TestAttributes(t *testing.T) {
 	}
 }
 
+func TestCallSiteAttributesAtIndex(t *testing.T) {
+	ctx := NewContext()
+	defer ctx.Dispose()
+	mod := ctx.NewModule("")
+	defer mod.Dispose()
+
+	ftyp := FunctionType(ctx.VoidType(), nil, false)
+	callee := AddFunction(mod, "callee", ftyp)
+	caller := AddFunction(mod, "caller", ftyp)
+	b := ctx.NewBuilder()
+	defer b.Dispose()
+	b.SetInsertPointAtEnd(AddBasicBlock(caller, "entry"))
+	call := b.CreateCall(ftyp, callee, nil, "")
+	b.CreateRetVoid()
+
+	nounwind := ctx.CreateEnumAttribute(AttributeKindID("nounwind"), 0)
+	metadata := ctx.CreateStringAttribute("llgo.test", "value")
+	call.AddCallSiteAttribute(-1, nounwind)
+	call.AddCallSiteAttribute(-1, metadata)
+
+	attrs := call.GetCallSiteAttributesAtIndex(-1)
+	if len(attrs) != 2 {
+		t.Fatalf("got %d function-index call-site attributes, want 2", len(attrs))
+	}
+	gotNounwind := false
+	gotMetadata := false
+	for _, attr := range attrs {
+		if attr.GetEnumKind() == int(AttributeKindID("nounwind")) {
+			gotNounwind = true
+		}
+		if attr.GetStringKind() == "llgo.test" && attr.GetStringValue() == "value" {
+			gotMetadata = true
+		}
+	}
+	if !gotNounwind || !gotMetadata {
+		t.Fatalf("enumerated attributes missing nounwind=%v metadata=%v", gotNounwind, gotMetadata)
+	}
+}
+
 func TestDebugLoc(t *testing.T) {
 	ctx := NewContext()
 	mod := ctx.NewModule("")
