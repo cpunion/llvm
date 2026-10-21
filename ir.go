@@ -905,8 +905,8 @@ func (c Context) MetadataAsValue(md Metadata) (v Value) {
 
 // Operations on scalar constants
 func ConstInt(t Type, n uint64, signExtend bool) (v Value) {
-	v.C = C.LLVMConstInt(t.C,
-		C.ulonglong(n),
+	v.C = C.LLVMGoConstInt(t.C,
+		C.uint64_t(n),
 		boolToLLVMBool(signExtend))
 	return
 }

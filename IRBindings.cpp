@@ -45,6 +45,17 @@ LLVMValueRef LLVMGoIsABranchInst(LLVMValueRef Val) {
 #endif
 }
 
+LLVMValueRef LLVMGoConstInt(LLVMTypeRef Ty, uint64_t Val, LLVMBool SignExtend) {
+#if LLVM_VERSION_MAJOR >= 23
+  // LLVM 23 no longer implicitly masks values wider than the integer type.
+  // Preserve the Go binding's historical truncation and uniquing semantics.
+  return wrap(ConstantInt::get(unwrap<IntegerType>(Ty), Val, SignExtend != 0,
+                              /*ImplicitTrunc=*/true));
+#else
+  return LLVMConstInt(Ty, Val, SignExtend);
+#endif
+}
+
 LLVMValueRef LLVMGoConstFPFromBits(LLVMTypeRef Ty, const uint64_t *Words,
                                  unsigned NumWords) {
   if (!Ty || !unwrap(Ty)->isFloatingPointTy())

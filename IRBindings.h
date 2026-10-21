@@ -38,6 +38,7 @@ struct LLVMDebugLocMetadata{
 enum { LLVMGoBr = 2 };
 LLVMOpcode LLVMGoGetInstructionOpcode(LLVMValueRef Val);
 LLVMValueRef LLVMGoIsABranchInst(LLVMValueRef Val);
+LLVMValueRef LLVMGoConstInt(LLVMTypeRef Ty, uint64_t Val, LLVMBool SignExtend);
 
 LLVMValueRef LLVMGoConstFPFromBits(LLVMTypeRef Ty, const uint64_t *Words,
                                  unsigned NumWords);
