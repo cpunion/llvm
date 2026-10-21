@@ -36,6 +36,9 @@ func NewPassBuilderOptions() (pbo PassBuilderOptions) {
 //	default<O3>  -- run the default -O3 passes
 //	default<Os>  -- run the default -Os passes, like -O2 but size conscious
 //	default<Oz>  -- run the default -Oz passes, optimizing for size above all else
+//
+// LLVM 23 and later require default<O2> with optsize/minsize function
+// attributes instead of the Os/Oz pipeline optimization levels.
 func (mod Module) RunPasses(passes string, tm TargetMachine, options PassBuilderOptions) error {
 	cpasses := C.CString(passes)
 	defer C.free(unsafe.Pointer(cpasses))

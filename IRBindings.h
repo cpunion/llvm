@@ -33,6 +33,12 @@ struct LLVMDebugLocMetadata{
     LLVMMetadataRef InlinedAt;
 };
 
+// LLVM 23 split conditional and unconditional branches into separate opcodes.
+// Keep the Go API's shared Br opcode, whose historical value is 2.
+enum { LLVMGoBr = 2 };
+LLVMOpcode LLVMGoGetInstructionOpcode(LLVMValueRef Val);
+LLVMValueRef LLVMGoIsABranchInst(LLVMValueRef Val);
+
 LLVMValueRef LLVMGoConstFPFromBits(LLVMTypeRef Ty, const uint64_t *Words,
                                  unsigned NumWords);
 unsigned LLVMGoConstFPGetBits(LLVMValueRef Val, uint64_t *Words);

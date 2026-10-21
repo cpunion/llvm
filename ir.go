@@ -134,7 +134,7 @@ func llvmMetadataRefs(mds []Metadata) (*C.LLVMMetadataRef, C.unsigned) {
 
 const (
 	Ret         Opcode = C.LLVMRet
-	Br          Opcode = C.LLVMBr
+	Br          Opcode = C.LLVMGoBr
 	Switch      Opcode = C.LLVMSwitch
 	IndirectBr  Opcode = C.LLVMIndirectBr
 	Invoke      Opcode = C.LLVMInvoke
@@ -806,7 +806,7 @@ func (v Value) IsAPHINode() (rv Value)             { rv.C = C.LLVMIsAPHINode(v.C
 func (v Value) IsASelectInst() (rv Value)          { rv.C = C.LLVMIsASelectInst(v.C); return }
 func (v Value) IsAShuffleVectorInst() (rv Value)   { rv.C = C.LLVMIsAShuffleVectorInst(v.C); return }
 func (v Value) IsAStoreInst() (rv Value)           { rv.C = C.LLVMIsAStoreInst(v.C); return }
-func (v Value) IsABranchInst() (rv Value)          { rv.C = C.LLVMIsABranchInst(v.C); return }
+func (v Value) IsABranchInst() (rv Value)          { rv.C = C.LLVMGoIsABranchInst(v.C); return }
 func (v Value) IsAInvokeInst() (rv Value)          { rv.C = C.LLVMIsAInvokeInst(v.C); return }
 func (v Value) IsAReturnInst() (rv Value)          { rv.C = C.LLVMIsAReturnInst(v.C); return }
 func (v Value) IsASwitchInst() (rv Value)          { rv.C = C.LLVMIsASwitchInst(v.C); return }
@@ -1016,7 +1016,7 @@ func (v Value) ConstGetAsString() string {
 
 // Constant expressions
 func (v Value) Opcode() Opcode             { return Opcode(C.LLVMGetConstOpcode(v.C)) }
-func (v Value) InstructionOpcode() Opcode  { return Opcode(C.LLVMGetInstructionOpcode(v.C)) }
+func (v Value) InstructionOpcode() Opcode  { return Opcode(C.LLVMGoGetInstructionOpcode(v.C)) }
 func AlignOf(t Type) (v Value)             { v.C = C.LLVMAlignOf(t.C); return }
 func SizeOf(t Type) (v Value)              { v.C = C.LLVMSizeOf(t.C); return }
 func ConstNeg(v Value) (rv Value)          { rv.C = C.LLVMConstNeg(v.C); return }

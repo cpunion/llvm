@@ -26,6 +26,25 @@
 
 using namespace llvm;
 
+LLVMOpcode LLVMGoGetInstructionOpcode(LLVMValueRef Val) {
+  LLVMOpcode Opcode = LLVMGetInstructionOpcode(Val);
+#if LLVM_VERSION_MAJOR >= 23
+  if (Opcode == LLVMUncondBr || Opcode == LLVMCondBr)
+    return static_cast<LLVMOpcode>(LLVMGoBr);
+#endif
+  return Opcode;
+}
+
+LLVMValueRef LLVMGoIsABranchInst(LLVMValueRef Val) {
+#if LLVM_VERSION_MAJOR >= 23
+  if (LLVMValueRef Branch = LLVMIsAUncondBrInst(Val))
+    return Branch;
+  return LLVMIsACondBrInst(Val);
+#else
+  return LLVMIsABranchInst(Val);
+#endif
+}
+
 LLVMValueRef LLVMGoConstFPFromBits(LLVMTypeRef Ty, const uint64_t *Words,
                                  unsigned NumWords) {
   if (!Ty || !unwrap(Ty)->isFloatingPointTy())
@@ -141,18 +160,23 @@ LLVMValueRef LLVMGoBuildIntrinsicCall(LLVMBuilderRef B, LLVMTypeRef RetTy,
   ArrayRef<Value *> UnwrappedArgs(unwrap(Args), Count);
   SmallVector<Type *, 8> ParamTys;
   SmallVector<Type *, 8> OverloadTys;
-  SmallVector<Intrinsic::IITDescriptor, 8> Infos;
 
   ParamTys.reserve(Count);
   for (Value *Arg : UnwrappedArgs)
     ParamTys.push_back(Arg->getType());
 
   FunctionType *FTy = FunctionType::get(unwrap(RetTy), ParamTys, false);
+#if LLVM_VERSION_MAJOR >= 23
+  if (!Intrinsic::isSignatureValid(IntrinsicID, FTy, OverloadTys))
+    return nullptr;
+#else
+  SmallVector<Intrinsic::IITDescriptor, 8> Infos;
   Intrinsic::getIntrinsicInfoTableEntries(IntrinsicID, Infos);
   ArrayRef<Intrinsic::IITDescriptor> InfoRef(Infos);
   if (Intrinsic::matchIntrinsicSignature(FTy, InfoRef, OverloadTys) !=
       Intrinsic::MatchIntrinsicTypes_Match)
     return nullptr;
+#endif
 
   return wrap(unwrap(B)->CreateIntrinsic(IntrinsicID, OverloadTys,
                                          UnwrappedArgs, nullptr, Name));

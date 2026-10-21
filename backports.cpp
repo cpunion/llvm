@@ -32,6 +32,9 @@
 #include "llvm/ADT/Triple.h"
 #endif
 #include "llvm/Transforms/IPO.h"
+#if LLVM_VERSION_MAJOR >= 23
+#include "llvm/Transforms/Utils/AssignGUID.h"
+#endif
 #include "llvm-c/Core.h"
 #include "llvm-c/DebugInfo.h"
 #include <deque>
@@ -131,6 +134,9 @@ void LLVMGlobalObjectAddMetadata(LLVMValueRef Global, unsigned KindID, LLVMMetad
 LLVMMemoryBufferRef LLVMGoWriteThinLTOBitcodeToMemoryBuffer(LLVMModuleRef M) {
   std::string Data;
   llvm::raw_string_ostream OS(Data);
+#if LLVM_VERSION_MAJOR >= 23
+  llvm::AssignGUIDPass::runOnModule(*llvm::unwrap(M));
+#endif
 #if LLVM_VERSION_MAJOR >= 16
   llvm::LoopAnalysisManager LAM;
   llvm::FunctionAnalysisManager FAM;
@@ -159,6 +165,11 @@ LLVMMemoryBufferRef LLVMGoWriteFullLTOBitcodeToMemoryBuffer(
   llvm::raw_string_ostream OS(Data);
   llvm::Module *Mod = llvm::unwrap(M);
   Mod->addModuleFlag(llvm::Module::Error, "ThinLTO", uint32_t(0));
+#if LLVM_VERSION_MAJOR >= 23
+  // Summary construction now consumes persistent GUID metadata. Modules
+  // written without first running an optimization pipeline do not have it.
+  llvm::AssignGUIDPass::runOnModule(*Mod);
+#endif
   llvm::ProfileSummaryInfo PSI(*Mod);
   llvm::ModuleSummaryIndex Index =
       llvm::buildModuleSummaryIndex(*Mod, nullptr, &PSI);
